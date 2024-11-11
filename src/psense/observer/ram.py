@@ -37,3 +37,37 @@ class VirtualMemoryObserver(Observer[SystemVirtualMemory]):
             used=svmem.used,
             free=svmem.free,
         )
+
+
+@attr.s(slots=True, kw_only=True)
+class SwapMemory:
+    # the total swap memory in bytes
+    total: int = attr.ib(type=int)
+
+    # the used swap memory in bytes
+    used: int = attr.ib(type=int)
+
+    # the free swap memory in bytes
+    free: int = attr.ib(type=int)
+
+    # the percentage usage
+    percent: float = attr.ib(type=float)
+
+    # no. of bytes the system has swapped in from disk (cumulative)
+    sin: int = attr.ib(type=int)
+
+    # no. of bytes the system has swapped out from disk (cumulative)
+    sout: int = attr.ib(type=int)
+
+
+class SwapMemoryObserver(Observer[SwapMemory]):
+    def assay(self) -> SwapMemory:
+        sswap = psutil.swap_memory()
+        return SwapMemory(
+            total=sswap.total,
+            used=sswap.used,
+            free=sswap.free,
+            percent=sswap.percent,
+            sin=sswap.sin,
+            sout=sswap.sout,
+        )
