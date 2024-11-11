@@ -3,13 +3,12 @@ from abc import ABC, abstractmethod
 
 from typing_extensions import Self
 from types import TracebackType
-from threading import Thread
+from threading import Thread, Event
 
 MIN_INTERVAL = 1e-6
 
 Cortege = tuple[float, ...] | tuple[int, ...]
 Assey = tuple[float | int | Cortege, ...]
-Event = str | int
 
 
 class Observation:
@@ -59,6 +58,8 @@ class Observer(ABC):
 
         self._running = False
         self._thread: Thread | None = None
+        self._pause_event = Event()
+        self._stop_event = Event()
 
         self._current_event_name: str | None = None
         self._current_begin: float | None = None
@@ -97,10 +98,11 @@ class Observer(ABC):
         self._current_values = []
         return observation
 
-    def _observe(self, interval: float) -> None:
-        while self._running:
+    def _observe(self) -> None:
+        while not self._stop_event.is_set():
+            self._pause_event.wait()  # Wait until not paused
             self._current_values.append(self.assay())
-            time.sleep(interval)
+            time.sleep(self._interval)
 
     def start(self, name: str | None = None) -> None:
         """Start monitoring"""
@@ -110,7 +112,9 @@ class Observer(ABC):
             self._current_event_name = name
         self._current_begin = _now()
         self._running = True
-        self._thread = Thread(target=self._observe, args=(self._interval,))
+        self._pause_event.set()  # Ensure it's not paused
+        self._stop_event.clear()
+        self._thread = Thread(target=self._observe)
         self._thread.start()
 
     def stop(self) -> None:
@@ -118,6 +122,8 @@ class Observer(ABC):
         if not self._running:
             return
         self._running = False
+        self._stop_event.set()
+        self._pause_event.set()  # Unpause to allow stopping
         if self._thread:
             self._thread.join()
         self._flush()
