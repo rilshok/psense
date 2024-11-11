@@ -61,7 +61,6 @@ class Observer(ABC):
         self._keys = keys
         self._interval = interval
 
-        self._running = False
         self._thread: Thread | None = None
         self._pause_event = Event()
         self._stop_event = Event()
@@ -118,12 +117,11 @@ class Observer(ABC):
 
     def start(self, name: str | None = None) -> None:
         """Start monitoring"""
-        if self._running:
+        if self._thread and self._thread.is_alive():
             self._flush()
         if name is not None:
             self._current_event_name = name
         self._current_begin = _now()
-        self._running = True
         self._pause_event.set()  # Ensure it's not paused
         self._stop_event.clear()
         self._thread = Thread(target=self._observe)
@@ -131,13 +129,11 @@ class Observer(ABC):
 
     def stop(self) -> None:
         """Stop monitoring"""
-        if not self._running:
+        if not self._thread or not self._thread.is_alive():
             return
-        self._running = False
         self._stop_event.set()
         self._pause_event.set()  # Unpause to allow stopping
-        if self._thread:
-            self._thread.join()
+        self._thread.join()
         self._flush()
 
     def __call__(self, name: str) -> Self:
