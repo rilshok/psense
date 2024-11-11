@@ -1,59 +1,62 @@
 import psutil
 from .base import Observer
-import attr
 
 
-@attr.s(slots=True, kw_only=True)
-class CPUUsage:
-    # Percentage of CPU used by each core
-    per_core: list[float] = attr.ib(factory=list)
+class CPUUsageObserver(Observer):
+    """CPU usage observer
 
-    # Total percentage of CPU used
-    total: float = attr.ib()
+    Measures the CPU usage of the system and each core
 
-    # System-wide CPU times
-    user: float = attr.ib()
-    system: float = attr.ib()
-    idle: float = attr.ib()
+    Investigated metrics:
+        per_core (tuple[float]): Percentage of CPU used by each core
+        total (float): Total percentage of CPU used
+        user: (float): System-wide CPU user time
+        system: (float): System-wide CPU system time
+        idle: (float): System-wide CPU idle
 
+    """
 
-class CPUUsageObserver(Observer[CPUUsage]):
-    def assay(self) -> CPUUsage:
+    def __init__(self, interval: float | None = None):
+        keys = ("per_core", "total", "user", "system", "idle")
+        super().__init__(keys=keys, interval=interval)
+
+    def assay(self) -> tuple[tuple[float, ...], float, float, float, float]:
         per_core_usage = psutil.cpu_percent(percpu=True)
         total_usage = psutil.cpu_percent()
         cpu_times = psutil.cpu_times()
 
-        return CPUUsage(
-            per_core=per_core_usage,
-            total=total_usage,
-            user=cpu_times.user,
-            system=cpu_times.system,
-            idle=cpu_times.idle,
+        return (
+            tuple(per_core_usage),
+            total_usage,
+            cpu_times.user,
+            cpu_times.system,
+            cpu_times.idle,
         )
 
 
-@attr.s(slots=True, kw_only=True)
-class ProcessCPUUsage:
-    # Percentage of CPU used by the process
-    percent: float = attr.ib()
+class ProcessCPUUsageObserver(Observer):
+    """Process CPU usage observer
 
-    # System-wide CPU times used by the process
-    user: float = attr.ib()
-    system: float = attr.ib()
+    Measures the CPU usage of a specific process
 
+    Investigated metrics:
+        percent (float): Percentage of CPU used by the process
+        user (float): System-wide CPU user time
+        system (float): System-wide CPU system time
 
-class ProcessCPUUsageObserver(Observer[ProcessCPUUsage]):
+    """
+
     def __init__(self, interval: float | None = None, pid: int | None = None):
-        super().__init__()
-        self._interval = interval
+        keys = ("percent", "user", "system")
+        super().__init__(keys=keys, interval=interval)
         self._process = psutil.Process(pid)
 
-    def assay(self) -> ProcessCPUUsage:
-        cpu_percent = self._process.cpu_percent(interval=self._interval)
+    def assay(self) -> tuple[float, float, float]:
+        cpu_percent = self._process.cpu_percent(interval=None)
         cpu_times = self._process.cpu_times()
 
-        return ProcessCPUUsage(
-            percent=cpu_percent,
-            user=cpu_times.user,
-            system=cpu_times.system,
+        return (
+            cpu_percent,
+            cpu_times.user,
+            cpu_times.system,
         )

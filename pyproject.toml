@@ -22,7 +22,6 @@ lint = [
     "ruff>=0.6.3",
     "types-pytz>=2024.1",
     "types-psutil",
-    "types-attrs",
 ]
 test = [
     "pytest>=8.2.2",

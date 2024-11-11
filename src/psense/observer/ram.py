@@ -1,99 +1,90 @@
 import psutil
 
+
 from .base import Observer
-import attr
 
 
-@attr.s(slots=True, kw_only=True)
-class SystemVirtualMemory:
-    # total physical memory available
-    total: int = attr.ib()
+class VirtualMemoryObserver(Observer):
+    """Virtual memory observer
 
-    # the memory that can be given instantly to processes without the
-    # system going into swap
-    available: int = attr.ib()
+    Measures the virtual memory usage of the system
 
-    # the percentage usage calculated as (total - available) / total * 100
-    percent: float = attr.ib()
+    Investigated metrics:
+        total (int): Total physical memory available
+        available (int): The memory that can be given instantly to processes without the system going into swap
+        percent (float): The percentage usage calculated as (total - available) / total * 100
+        used (int): Memory used, calculated differently depending on the platform and designed for informational purposes only:
+            macOS: active + wired
+            BSD: active + wired + cached
+            Linux: total - free
+        free (int): Memory not being used at all (zeroed) that is readily available
+    """
 
-    # memory used, calculated differently depending on the platform and
-    # designed for informational purposes only:
-    # macOS: active + wired
-    # BSD: active + wired + cached
-    # Linux: total - free
-    used: int = attr.ib()
+    def __init__(self, interval: float | None = None):
+        keys = ("total", "available", "percent", "used", "free")
+        super().__init__(keys=keys, interval=interval)
 
-    # memory not being used at all (zeroed) that is readily available
-    free: int = attr.ib()
-
-
-class VirtualMemoryObserver(Observer[SystemVirtualMemory]):
-    def assay(self) -> SystemVirtualMemory:
+    def assay(self) -> tuple[int, int, float, int, int]:
         svmem = psutil.virtual_memory()
-        return SystemVirtualMemory(
-            total=svmem.total,
-            available=svmem.available,
-            percent=svmem.percent,
-            used=svmem.used,
-            free=svmem.free,
+        return (
+            svmem.total,
+            svmem.available,
+            svmem.percent,
+            svmem.used,
+            svmem.free,
         )
 
 
-@attr.s(slots=True, kw_only=True)
-class SwapMemory:
-    # the total swap memory in bytes
-    total: int = attr.ib()
+class SwapMemoryObserver(Observer):
+    """Swap memory observer
 
-    # the used swap memory in bytes
-    used: int = attr.ib()
+    Measures the swap memory usage of the system
 
-    # the free swap memory in bytes
-    free: int = attr.ib()
+    Investigated metrics:
+        total (int): The total swap memory in bytes
+        used (int): The used swap memory in bytes
+        free (int): The free swap memory in bytes
+        percent (float): The percentage usage
+        sin (int): No. of bytes the system has swapped in from disk (cumulative)
+        sout (int): No. of bytes the system has swapped out from disk (cumulative)
+    """
 
-    # the percentage usage
-    percent: float = attr.ib()
+    def __init__(self, interval: float | None = None):
+        keys = ("total", "used", "free", "percent", "sin", "sout")
+        super().__init__(keys=keys, interval=interval)
 
-    # no. of bytes the system has swapped in from disk (cumulative)
-    sin: int = attr.ib()
-
-    # no. of bytes the system has swapped out from disk (cumulative)
-    sout: int = attr.ib()
-
-
-class SwapMemoryObserver(Observer[SwapMemory]):
-    def assay(self) -> SwapMemory:
+    def assay(self) -> tuple[int, int, int, float, int, int]:
         sswap = psutil.swap_memory()
-        return SwapMemory(
-            total=sswap.total,
-            used=sswap.used,
-            free=sswap.free,
-            percent=sswap.percent,
-            sin=sswap.sin,
-            sout=sswap.sout,
+        return (
+            sswap.total,
+            sswap.used,
+            sswap.free,
+            sswap.percent,
+            sswap.sin,
+            sswap.sout,
         )
 
 
-@attr.s(slots=True, kw_only=True)
-class ProcessMemory:
-    # amount of physical memory used by the process in RAM
-    rss: int = attr.ib()
+class ProcessMemoryObserver(Observer):
+    """Process memory observer
 
-    # total amount of virtual memory allocated to the process
-    vms: int = attr.ib()
+    Measures the memory usage of a specific process
 
-    # memory unique to the process that would be freed if the process were terminated
-    uss: int = attr.ib()
+    Investigated metrics:
+        rss (int): Amount of physical memory used by the process in RAM
+        vms (int): Total amount of virtual memory allocated to the process
+        uss (int): Memory unique to the process that would be freed if the process were terminated
+    """
 
-
-class ProcessMemoryObserver(Observer[ProcessMemory]):
-    def __init__(self, pid: int | None = None):
-        super().__init__()
+    def __init__(self, interval: float | None = None, pid: int | None = None):
+        keys = ("rss", "vms", "uss")
+        super().__init__(keys=keys, interval=interval)
         self._process = psutil.Process(pid)
 
-    def assay(self) -> ProcessMemory:
+    def assay(self) -> tuple[int, int, int]:
         pfullmem = self._process.memory_full_info()
-        return ProcessMemory(
-            rss=pfullmem.rss,
-            vms=pfullmem.vms,
-            uss=pfullmem.uss,
+        return (
+            pfullmem.rss,
+            pfullmem.vms,
+            pfullmem.uss,
         )
