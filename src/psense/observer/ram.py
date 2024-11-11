@@ -81,6 +81,9 @@ class ProcessMemory:
     # total amount of virtual memory allocated to the process
     vms: int = attr.ib(type=int)
 
+    # memory unique to the process that would be freed if the process were terminated
+    uss: int = attr.ib(type=int)
+
 
 class ProcessMemoryObserver(Observer[ProcessMemory]):
     def __init__(self, pid: int | None = None):
@@ -88,8 +91,9 @@ class ProcessMemoryObserver(Observer[ProcessMemory]):
         self._process = psutil.Process(pid)
 
     def assay(self) -> ProcessMemory:
-        pmem = self._process.memory_info()
+        pfullmem = self._process.memory_full_info()
         return ProcessMemory(
-            rss=pmem.rss,
-            vms=pmem.vms,
+            rss=pfullmem.rss,
+            vms=pfullmem.vms,
+            uss=pfullmem.uss,
         )
