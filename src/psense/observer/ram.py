@@ -20,7 +20,7 @@ class VirtualMemoryObserver(Observer):
         free (int): Memory not being used at all (zeroed) that is readily available
     """
 
-    def __init__(self, interval: float | None = None):
+    def __init__(self, interval: float):
         keys = ("total", "available", "percent", "used", "free")
         super().__init__(keys=keys, interval=interval)
 
@@ -49,7 +49,7 @@ class SwapMemoryObserver(Observer):
         sout (int): No. of bytes the system has swapped out from disk (cumulative)
     """
 
-    def __init__(self, interval: float | None = None):
+    def __init__(self, interval: float):
         keys = ("total", "used", "free", "percent", "sin", "sout")
         super().__init__(keys=keys, interval=interval)
 
@@ -76,7 +76,7 @@ class ProcessMemoryObserver(Observer):
         uss (int): Memory unique to the process that would be freed if the process were terminated
     """
 
-    def __init__(self, interval: float | None = None, pid: int | None = None):
+    def __init__(self, interval: float, pid: int | None = None):
         keys = ("rss", "vms", "uss")
         super().__init__(keys=keys, interval=interval)
         self._process = psutil.Process(pid)
