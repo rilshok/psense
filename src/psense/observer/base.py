@@ -19,6 +19,7 @@ class Observation:
         begin: float,
         end: float,
         keys: tuple[str, ...],
+        times: list[float],
         values: list[Assey],
     ) -> None:
         if begin > end:
@@ -28,11 +29,15 @@ class Observation:
             max_len = max(len(v) for v in values)
             msg = f"values must have {len(keys)} elements, but there is a value with {max_len}."
             raise ValueError(msg)
+        if len(times) != len(values):
+            msg = "times and values must have the same length."
+            raise ValueError(msg)
         self.name = name
         self.number = number
         self.begin = begin
         self.end = end
         self.keys = keys
+        self.times = times
         self.values = values
 
 
@@ -63,6 +68,7 @@ class Observer(ABC):
 
         self._current_event_name: str | None = None
         self._current_begin: float | None = None
+        self._current_times: list[float] = []
         self._current_values: list[Assey] = []
 
         self._observations: list[Observation] = []
@@ -91,17 +97,23 @@ class Observer(ABC):
             begin=self._current_begin,
             end=_now(),
             keys=self._keys,
+            times=self._current_times,
             values=self._current_values,
         )
         self._observations.append(observation)
         self._current_begin = None
+        self._current_times = []
         self._current_values = []
         return observation
 
     def _observe(self) -> None:
         while not self._stop_event.is_set():
             self._pause_event.wait()  # Wait until not paused
-            self._current_values.append(self.assay())
+            now1 = _now()
+            assay = self.assay()
+            now2 = _now()
+            self._current_times.append((now1 + now2) / 2)
+            self._current_values.append(assay)
             time.sleep(self._interval)
 
     def start(self, name: str | None = None) -> None:
