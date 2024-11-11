@@ -7,24 +7,24 @@ import attr
 @attr.s(slots=True, kw_only=True)
 class SystemVirtualMemory:
     # total physical memory available
-    total: int = attr.ib(type=int)
+    total: int = attr.ib()
 
     # the memory that can be given instantly to processes without the
     # system going into swap
-    available: int = attr.ib(type=int)
+    available: int = attr.ib()
 
     # the percentage usage calculated as (total - available) / total * 100
-    percent: float = attr.ib(type=float)
+    percent: float = attr.ib()
 
     # memory used, calculated differently depending on the platform and
     # designed for informational purposes only:
     # macOS: active + wired
     # BSD: active + wired + cached
     # Linux: total - free
-    used: int = attr.ib(type=int)
+    used: int = attr.ib()
 
     # memory not being used at all (zeroed) that is readily available
-    free: int = attr.ib(type=int)
+    free: int = attr.ib()
 
 
 class VirtualMemoryObserver(Observer[SystemVirtualMemory]):
@@ -42,22 +42,22 @@ class VirtualMemoryObserver(Observer[SystemVirtualMemory]):
 @attr.s(slots=True, kw_only=True)
 class SwapMemory:
     # the total swap memory in bytes
-    total: int = attr.ib(type=int)
+    total: int = attr.ib()
 
     # the used swap memory in bytes
-    used: int = attr.ib(type=int)
+    used: int = attr.ib()
 
     # the free swap memory in bytes
-    free: int = attr.ib(type=int)
+    free: int = attr.ib()
 
     # the percentage usage
-    percent: float = attr.ib(type=float)
+    percent: float = attr.ib()
 
     # no. of bytes the system has swapped in from disk (cumulative)
-    sin: int = attr.ib(type=int)
+    sin: int = attr.ib()
 
     # no. of bytes the system has swapped out from disk (cumulative)
-    sout: int = attr.ib(type=int)
+    sout: int = attr.ib()
 
 
 class SwapMemoryObserver(Observer[SwapMemory]):
@@ -76,13 +76,13 @@ class SwapMemoryObserver(Observer[SwapMemory]):
 @attr.s(slots=True, kw_only=True)
 class ProcessMemory:
     # amount of physical memory used by the process in RAM
-    rss: int = attr.ib(type=int)
+    rss: int = attr.ib()
 
     # total amount of virtual memory allocated to the process
-    vms: int = attr.ib(type=int)
+    vms: int = attr.ib()
 
     # memory unique to the process that would be freed if the process were terminated
-    uss: int = attr.ib(type=int)
+    uss: int = attr.ib()
 
 
 class ProcessMemoryObserver(Observer[ProcessMemory]):
