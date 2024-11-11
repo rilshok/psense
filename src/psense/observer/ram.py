@@ -71,3 +71,25 @@ class SwapMemoryObserver(Observer[SwapMemory]):
             sin=sswap.sin,
             sout=sswap.sout,
         )
+
+
+@attr.s(slots=True, kw_only=True)
+class ProcessMemory:
+    # amount of physical memory used by the process in RAM
+    rss: int = attr.ib(type=int)
+
+    # total amount of virtual memory allocated to the process
+    vms: int = attr.ib(type=int)
+
+
+class ProcessMemoryObserver(Observer[ProcessMemory]):
+    def __init__(self, pid: int | None = None):
+        super().__init__()
+        self._process = psutil.Process(pid)
+
+    def assay(self) -> ProcessMemory:
+        pmem = self._process.memory_info()
+        return ProcessMemory(
+            rss=pmem.rss,
+            vms=pmem.vms,
+        )
