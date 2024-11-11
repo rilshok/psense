@@ -76,7 +76,7 @@ class ProcessMemoryObserver(Observer):
         uss (int): Memory unique to the process that would be freed if the process were terminated
     """
 
-    def __init__(self, interval: float, pid: int | None = None):
+    def __init__(self, interval: float, *, pid: int | None = None):
         keys = ("rss", "vms", "uss")
         super().__init__(keys=keys, interval=interval)
         self._process = psutil.Process(pid)

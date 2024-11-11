@@ -46,7 +46,7 @@ class ProcessCPUUsageObserver(Observer):
 
     """
 
-    def __init__(self, interval: float, pid: int | None = None):
+    def __init__(self, interval: float, *, pid: int | None = None):
         keys = ("percent", "user", "system")
         super().__init__(keys=keys, interval=interval)
         self._process = psutil.Process(pid)
