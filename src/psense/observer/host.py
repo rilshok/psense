@@ -2,7 +2,7 @@ import psutil
 from .base import Observer
 
 
-class CPUUsageObserver(Observer):
+class CPUObserver(Observer):
     """CPU usage observer
 
     Measures the CPU usage of the system and each core
@@ -34,7 +34,7 @@ class CPUUsageObserver(Observer):
         )
 
 
-class ProcessCPUUsageObserver(Observer):
+class ProcessCPUObserver(Observer):
     """Process CPU usage observer
 
     Measures the CPU usage of a specific process
@@ -62,7 +62,7 @@ class ProcessCPUUsageObserver(Observer):
         )
 
 
-class VirtualMemoryObserver(Observer):
+class MemObserver(Observer):
     """Virtual memory observer
 
     Measures the virtual memory usage of the system
@@ -93,7 +93,7 @@ class VirtualMemoryObserver(Observer):
         )
 
 
-class SwapMemoryObserver(Observer):
+class SwapObserver(Observer):
     """Swap memory observer
 
     Measures the swap memory usage of the system
@@ -123,7 +123,7 @@ class SwapMemoryObserver(Observer):
         )
 
 
-class ProcessMemoryObserver(Observer):
+class ProcessMemObserver(Observer):
     """Process memory observer
 
     Measures the memory usage of a specific process
