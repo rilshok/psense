@@ -70,12 +70,14 @@ class MemMeasurer(Measurer):
 
     Investigated metrics:
         total (int): Total physical memory available
-        available (int): The memory that can be given instantly to processes without the system going into swap
+        available (int): The memory that can be given instantly
+                         to processes without the system going into swap
         percent (float): The percentage usage calculated as (total - available) / total * 100
-        used (int): Memory used, calculated differently depending on the platform and designed for informational purposes only:
-            macOS: active + wired
-            BSD: active + wired + cached
-            Linux: total - free
+        used (int): Memory used, calculated differently depending on the platform
+                    and designed for informational purposes only:
+                        macOS: active + wired
+                        BSD: active + wired + cached
+                        Linux: total - free
         free (int): Memory not being used at all (zeroed) that is readily available
     """
 

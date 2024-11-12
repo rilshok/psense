@@ -1,8 +1,8 @@
 import time
+from collections.abc import Callable, Iterable
 from statistics import mean, median
 from threading import Event, Thread
 from types import TracebackType
-from typing import Callable, Iterable
 
 from typing_extensions import Self
 
@@ -42,7 +42,7 @@ class Observation:
 
     def apply(self, func: Callable[[Iterable[float | int]], float | int]) -> Assey:
         """Apply a function to each key"""
-        return tuple(func(v) for v in zip(*self.values))
+        return tuple(func(v) for v in zip(*self.values, strict=False))
 
     def mean(self) -> Assey:
         """Calculate the mean of the values"""

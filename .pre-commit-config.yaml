@@ -22,7 +22,7 @@ repos:
   hooks:
     - id: ruff
       types_or: [ python, pyi ]
-      args: [ --fix, --select, I]
+      args: [ --fix ]
     - id: ruff-format
       types_or: [ python, pyi ]
 
