@@ -10,6 +10,7 @@ authors = [
 ]
 dependencies = [
     "typing-extensions>=4.8.0",
+    "nvitop>=1.3.2",
 ]
 
 [tool.setuptools.dynamic]
