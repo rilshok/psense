@@ -1,14 +1,14 @@
 import psutil
-from .base import Observer
+
+from .base import Measurer
 
 
-class CPUObserver(Observer):
-    """CPU usage observer
+class CPUMeasurer(Measurer):
+    """CPU usage measurer
 
     Measures the CPU usage of the system and each core
 
     Investigated metrics:
-        per_core (tuple[float]): Percentage of CPU used by each core
         total (float): Total percentage of CPU used
         user: (float): System-wide CPU user time
         system: (float): System-wide CPU system time
@@ -16,17 +16,17 @@ class CPUObserver(Observer):
 
     """
 
-    def __init__(self, interval: float):
-        keys = ("per_core", "total", "user", "system", "idle")
-        super().__init__(keys=keys, interval=interval)
+    def __init__(self) -> None:
+        super().__init__(
+            name="CPU",
+            keys=("total", "user", "system", "idle"),
+        )
 
-    def assay(self) -> tuple[tuple[float, ...], float, float, float, float]:
-        per_core_usage = psutil.cpu_percent(percpu=True)
+    def assey(self) -> tuple[float, float, float, float]:
         total_usage = psutil.cpu_percent()
         cpu_times = psutil.cpu_times()
 
         return (
-            tuple(per_core_usage),
             total_usage,
             cpu_times.user,
             cpu_times.system,
@@ -34,8 +34,8 @@ class CPUObserver(Observer):
         )
 
 
-class ProcessCPUObserver(Observer):
-    """Process CPU usage observer
+class ProcessCPUMeasurer(Measurer):
+    """Process CPU usage measurer
 
     Measures the CPU usage of a specific process
 
@@ -46,15 +46,16 @@ class ProcessCPUObserver(Observer):
 
     """
 
-    def __init__(self, interval: float, *, pid: int | None = None):
-        keys = ("percent", "user", "system")
-        super().__init__(keys=keys, interval=interval)
+    def __init__(self, pid: int | None = None) -> None:
         self._process = psutil.Process(pid)
+        super().__init__(
+            name=f"CPU[{self._process.pid}]",
+            keys=("percent", "user", "system"),
+        )
 
-    def assay(self) -> tuple[float, float, float]:
+    def assey(self) -> tuple[float, float, float]:
         cpu_percent = self._process.cpu_percent(interval=None)
         cpu_times = self._process.cpu_times()
-
         return (
             cpu_percent,
             cpu_times.user,
@@ -62,8 +63,8 @@ class ProcessCPUObserver(Observer):
         )
 
 
-class MemObserver(Observer):
-    """Virtual memory observer
+class MemMeasurer(Measurer):
+    """Virtual memory measurer
 
     Measures the virtual memory usage of the system
 
@@ -78,11 +79,10 @@ class MemObserver(Observer):
         free (int): Memory not being used at all (zeroed) that is readily available
     """
 
-    def __init__(self, interval: float):
-        keys = ("total", "available", "percent", "used", "free")
-        super().__init__(keys=keys, interval=interval)
+    def __init__(self) -> None:
+        super().__init__(name="MEM", keys=("total", "available", "percent", "used", "free"))
 
-    def assay(self) -> tuple[int, int, float, int, int]:
+    def assey(self) -> tuple[int, int, float, int, int]:
         svmem = psutil.virtual_memory()
         return (
             svmem.total,
@@ -93,8 +93,8 @@ class MemObserver(Observer):
         )
 
 
-class SwapObserver(Observer):
-    """Swap memory observer
+class SwapMeasurer(Measurer):
+    """Swap memory measurer
 
     Measures the swap memory usage of the system
 
@@ -107,11 +107,13 @@ class SwapObserver(Observer):
         sout (int): No. of bytes the system has swapped out from disk (cumulative)
     """
 
-    def __init__(self, interval: float):
-        keys = ("total", "used", "free", "percent", "sin", "sout")
-        super().__init__(keys=keys, interval=interval)
+    def __init__(self) -> None:
+        super().__init__(
+            name="SWP",
+            keys=("total", "used", "free", "percent", "sin", "sout"),
+        )
 
-    def assay(self) -> tuple[int, int, int, float, int, int]:
+    def assey(self) -> tuple[int, int, int, float, int, int]:
         sswap = psutil.swap_memory()
         return (
             sswap.total,
@@ -123,8 +125,8 @@ class SwapObserver(Observer):
         )
 
 
-class ProcessMemObserver(Observer):
-    """Process memory observer
+class ProcessMemMeasurer(Measurer):
+    """Process memory measurer
 
     Measures the memory usage of a specific process
 
@@ -134,12 +136,14 @@ class ProcessMemObserver(Observer):
         uss (int): Memory unique to the process that would be freed if the process were terminated
     """
 
-    def __init__(self, interval: float, *, pid: int | None = None):
-        keys = ("rss", "vms", "uss")
-        super().__init__(keys=keys, interval=interval)
+    def __init__(self, pid: int | None = None) -> None:
         self._process = psutil.Process(pid)
+        super().__init__(
+            name=f"MEM[{self._process.pid}]",
+            keys=("rss", "vms", "uss"),
+        )
 
-    def assay(self) -> tuple[int, int, int]:
+    def assey(self) -> tuple[int, int, int]:
         pfullmem = self._process.memory_full_info()
         return (
             pfullmem.rss,

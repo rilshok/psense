@@ -1,14 +1,12 @@
 import time
-from abc import ABC, abstractmethod
+from threading import Event, Thread
+from types import TracebackType
 
 from typing_extensions import Self
-from types import TracebackType
-from threading import Thread, Event
+
+from .measure.base import Assey, Measurer, MeasurerGroup
 
 MIN_INTERVAL = 1e-6
-
-Cortege = tuple[float, ...] | tuple[int, ...]
-Assey = tuple[float | int | Cortege, ...]
 
 
 class Observation:
@@ -41,24 +39,20 @@ class Observation:
         self.values = values
 
 
-class ObservationSet:
-    def __init__(self, observations: list[Observation]) -> None:
-        self._observations = observations
-
-
 def _now() -> float:
     # TODO(@rilshok): rebase to time.perf_counter()
     return time.time()
 
 
-class Observer(ABC):
-    def __init__(self, keys: tuple[str, ...], interval: float) -> None:
+class Observer:
+    def __init__(self, interval: float, *mesurers: Measurer) -> None:
         if interval < MIN_INTERVAL:
             msg = f"Interval must be greater than 0, got {interval=}."
             if 0.0 < interval < MIN_INTERVAL:
                 msg += f" Consider using a value greater than {MIN_INTERVAL:.0e}."
             raise ValueError(msg)
-        self._keys = keys
+
+        self._measurer = MeasurerGroup(mesurers)
         self._interval = interval
 
         self._thread: Thread | None = None
@@ -77,10 +71,9 @@ class Observer(ABC):
         """The list of observations"""
         return self._observations.copy()
 
-    @abstractmethod
     def assay(self) -> Assey:
         """Take an assay of the current state"""
-        raise NotImplementedError()
+        return self._measurer.assey()
 
     def _flush(self) -> Observation:
         if self._current_begin is None:
@@ -95,7 +88,7 @@ class Observer(ABC):
             number=len(self._observations),
             begin=self._current_begin,
             end=_now(),
-            keys=self._keys,
+            keys=self._measurer.keys_full,
             times=self._current_times,
             values=self._current_values,
         )
