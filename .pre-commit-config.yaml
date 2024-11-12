@@ -22,9 +22,10 @@ repos:
   hooks:
     - id: ruff
       types_or: [ python, pyi ]
-      args: [ --fix ]
+      args: [ --fix, --select, I]
     - id: ruff-format
       types_or: [ python, pyi ]
+
 
 - repo: https://github.com/jendrikseipp/vulture
   rev: v2.13

@@ -1,12 +1,12 @@
 import time
+from statistics import mean, median
 from threading import Event, Thread
 from types import TracebackType
+from typing import Callable, Iterable
 
 from typing_extensions import Self
 
 from .measure.base import Assey, Measurer, MeasurerGroup
-from statistics import mean, median
-from typing import Callable, Iterable
 
 MIN_INTERVAL = 1e-6
 
