@@ -34,9 +34,15 @@ class Measurer(ABC):
 
 class MeasurerGroup(Measurer):
     def __init__(self, mesurers: Iterable[Measurer]) -> None:
+        mesurers = list(mesurers)
+        if len(set(measurer.name for measurer in mesurers)) != len(mesurers):
+            msg = "Measurers must have unique names."
+            raise ValueError(msg)
         self._mesurers = list(mesurers)
-        keys = tuple(key for measurer in self._mesurers for key in measurer.keys_full)
-        super().__init__(name="", keys=keys)
+        super().__init__(
+            name="",
+            keys=tuple(key for measurer in self._mesurers for key in measurer.keys_full),
+        )
 
     def assey(self) -> Assey:
         return tuple(value for measurer in self._mesurers for value in measurer.assey())
