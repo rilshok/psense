@@ -1,5 +1,6 @@
 import time
 from collections.abc import Callable, Iterable, Iterator, Sequence
+from operator import itemgetter
 from statistics import mean, median
 from threading import Event, Thread
 from types import TracebackType
@@ -10,6 +11,8 @@ from typing_extensions import Self
 from .measure.base import Assey, Measurer, MeasurerGroup
 
 MIN_INTERVAL = 1e-6
+
+Measurements = tuple[float | int, ...]
 
 
 class Observation:
@@ -52,6 +55,16 @@ class Observation:
     def median(self) -> Assey:
         """Calculate the median of the values"""
         return self.apply(median)
+
+    def __getitem__(
+        self,
+        key: str | tuple[str, ...],
+    ) -> Measurements | tuple[Measurements, ...]:
+        """Get the values of a key"""
+        if isinstance(key, str):
+            key = (key,)
+        keys = tuple(self.keys.index(k) for k in key)
+        return tuple(map(itemgetter(*keys), self.values))
 
 
 class ObservationSequence(Sequence[Observation]):
