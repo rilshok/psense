@@ -1,8 +1,9 @@
 import time
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from statistics import mean, median
 from threading import Event, Thread
 from types import TracebackType
+from typing import overload
 
 from typing_extensions import Self
 
@@ -53,6 +54,53 @@ class Observation:
         return self.apply(median)
 
 
+class ObservationSequence(Sequence[Observation]):
+    def __init__(self, observations: Iterable[Observation]) -> None:
+        self._observations = list(observations)
+
+    @overload
+    def __getitem__(self, index: int) -> Observation: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> "ObservationSequence": ...
+
+    def __getitem__(self, index: int | slice) -> "Observation | ObservationSequence":
+        result = self._observations[index]
+        if isinstance(result, Observation):
+            return result
+        return ObservationSequence(result)
+
+    def __len__(self) -> int:
+        return len(self._observations)
+
+    def __iter__(self) -> Iterator[Observation]:
+        return iter(self._observations)
+
+    def aggregate(
+        self,
+        func: Callable[[Iterable[float | int]], float | int],
+        name: str | None = None,
+    ) -> Observation:
+        """Aggregate the values of the observations"""
+        return Observation(
+            name=name or "aggregate",
+            number=0,
+            begin=self._observations[0].begin,
+            end=self._observations[-1].end,
+            keys=self._observations[0].keys,
+            times=[(o.times[0] + o.times[-1]) / 2 for o in self._observations],
+            values=[o.apply(func) for o in self._observations],
+        )
+
+    def means(self) -> Observation:
+        """Calculate the means of the values"""
+        return self.aggregate(mean, name="means")
+
+    def medians(self) -> Observation:
+        """Calculate the medians of the values"""
+        return self.aggregate(median, name="medians")
+
+
 def _now() -> float:
     # TODO(@rilshok): rebase to time.perf_counter()
     return time.time()
@@ -81,9 +129,9 @@ class Observer:
         self._observations: list[Observation] = []
 
     @property
-    def observations(self) -> list[Observation]:
-        """The list of observations"""
-        return self._observations.copy()
+    def observations(self) -> ObservationSequence:
+        """Get the observations"""
+        return ObservationSequence(self._observations)
 
     def assay(self) -> Assey:
         """Take an assay of the current state"""
