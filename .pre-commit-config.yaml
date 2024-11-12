@@ -26,6 +26,7 @@ repos:
     - id: ruff-format
       types_or: [ python, pyi ]
 
+
 - repo: https://github.com/jendrikseipp/vulture
   rev: v2.13
   hooks:
