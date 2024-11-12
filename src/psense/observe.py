@@ -5,6 +5,8 @@ from types import TracebackType
 from typing_extensions import Self
 
 from .measure.base import Assey, Measurer, MeasurerGroup
+from statistics import mean, median
+from typing import Callable, Iterable
 
 MIN_INTERVAL = 1e-6
 
@@ -37,6 +39,18 @@ class Observation:
         self.keys = keys
         self.times = times
         self.values = values
+
+    def apply(self, func: Callable[[Iterable[float | int]], float | int]) -> Assey:
+        """Apply a function to each key"""
+        return tuple(func(v) for v in zip(*self.values))
+
+    def mean(self) -> Assey:
+        """Calculate the mean of the values"""
+        return self.apply(mean)
+
+    def median(self) -> Assey:
+        """Calculate the median of the values"""
+        return self.apply(median)
 
 
 def _now() -> float:
